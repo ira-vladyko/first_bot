@@ -1,7 +1,10 @@
 const { Telegraf, Markup } = require('telegraf');
+const { connectToDB, disconnectDB } = require('./mongoDB');
 const { telegramToken } = require('./config')
 const { getWeatherInBelgrade } = require('./forecast')
 const { dates } = require('./constants')
+const storage = require('./storage');
+
 
 //создаем бота
 const bot = new Telegraf(telegramToken);
@@ -19,6 +22,7 @@ const mainKeyboard = {
 bot.command('start', async (context) => {
     const user = context.message.from
     console.log(`Пользователь ${user.id} c ником ${user.username} запустил бота`)
+    await storage.saveUser(user)
     await context.replyWithPhoto({ source: IMAGE_PATH }, { caption: `Hello, ${user.first_name}!❤️` })
     context.reply('Выберите действие', mainKeyboard)
 })
@@ -55,4 +59,15 @@ bot.on('text', async (context) => {
     }
 })
 
-bot.launch()
+async function main() {
+    try {
+        await connectToDB()
+        bot.launch()
+    }
+    catch (error) {
+        console.log(error);
+        await disconnectDB()
+    }
+}
+
+main()
