@@ -2,35 +2,42 @@ const axios = require('axios');
 const { forecastApiKey } = require('./config')
 const { dates } = require('./constants')
 
-
 const getWeatherInBelgrade = async (dayCounter) => {
     try {
-        const currentWeatherResponse = await axios.get(`http://api.weatherapi.com/v1/forecast.json?q=Belgrade&key=${forecastApiKey}&lang=ru&days=${dayCounter}`)
-        //console.log(JSON.stringify(currentWeatherResponse.data.forecast))
-        if (dayCounter == 1) {
-            const { condition, maxtemp_c, mintemp_c } = currentWeatherResponse.data.forecast.forecastday[0].day
-            console.log(condition, maxtemp_c, mintemp_c)
-            return `${condition.text} от ${mintemp_c} до ${maxtemp_c}`
+        const forecastApiPath = `http://api.weatherapi.com/v1/forecast.json`
+        const params = `q=Belgrade&key=${forecastApiKey}&lang=ru&days=${dayCounter}`
+        const currentWeatherResponse = await axios.get(`${forecastApiPath}?${params}`)
+        const daysArray = currentWeatherResponse.data.forecast.forecastday;
+        if (dayCounter == dates.today.days || dayCounter == dates.tomorrow.days) {
+            const result = getInfoObject(daysArray[dayCounter - 1])
+            return result
         }
-        if (dayCounter == 2) {
-            const { condition, maxtemp_c, mintemp_c } = currentWeatherResponse.data.forecast.forecastday[1].day
-            console.log(condition)
-            return `${condition.text} от ${mintemp_c} до ${maxtemp_c}`
+        if (dayCounter == dates.week.days) {
+            const daysInfo = [];
+            daysArray.forEach((dayObject) => {
+                const resultObject = getInfoObject(dayObject)
+                daysInfo.push(resultObject.text)
+            })
+            return { text: daysInfo.join('\n') }
         }
-
     } catch (error) {
-        //console.log(error.message, error.response)
+        if (error.message && error.response) {
+            console.error(error.message, error.response)
+        } else {
+            console.error(error.toString())
+        }
+        return 'Извините, не могу получить погоду'
     }
-
-
-
-
-
 }
 
-
+function getInfoObject(dayObject) {
+    const { condition, maxtemp_c, mintemp_c } = dayObject.day
+    const date = dayObject.date
+    const resultString = `${date}: ${condition.text} от ${mintemp_c} до ${maxtemp_c}`
+    return { text: resultString, icon: `https:${condition.icon}` }
+}
 
 module.exports = {
     getWeatherInBelgrade,
-
 }
+
