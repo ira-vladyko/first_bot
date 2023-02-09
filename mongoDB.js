@@ -6,9 +6,17 @@ const client = new MongoClient(mongoUrl);
 const db = client.db(dbName);
 const usersCollection = db.collection('users');
 
+async function connectToDB() {
+    return client.connect()
+}
+
+async function disconnectDB() {
+    return client.lose()
+}
+
 module.exports = {
-    connectToDB: () => client.connect(),
-    disconnectDB: () => client.close(),
+    connectToDB,
+    disconnectDB,
     usersCollection
 }
 

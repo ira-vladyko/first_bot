@@ -1,5 +1,6 @@
 const { Telegraf, Markup } = require('telegraf');
 const { connectToDB, disconnectDB } = require('./mongoDB');
+const { connectToStorage, disconnectStorage } = require('./storage')
 const { telegramToken } = require('./config')
 const { getWeatherInBelgrade } = require('./forecast')
 const { dates } = require('./constants')
@@ -61,12 +62,12 @@ bot.on('text', async (context) => {
 
 async function main() {
     try {
-        await connectToDB()
+        await connectToStorage()
         bot.launch()
     }
     catch (error) {
         console.log(error);
-        await disconnectDB()
+        await disconnectStorage()
     }
 }
 
